@@ -235,7 +235,7 @@ For issues, feature requests, or questions:
 **Mayank Rai**
 - GitHub: [@MayankRai89](https://github.com/MayankRai89)
 - Project: [KanBan Board](https://github.com/MayankRai89/KanBan)
-
+- Link: https://kan-dju2td40v-mayank-rais-projects-1b6da0fa.vercel.app/
 ## Changelog
 
 ### Version 1.0 (Current)
