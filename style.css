@@ -1,0 +1,447 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+:root {
+    --background-color: #000000;
+    --bg-button-color: #1A1A1A;
+    --primary-text-color: #333333;
+    --secondary-color: #2C2C2C;
+    --accent-color: #4CAF50;
+    --text-color: #FFFFFF;
+
+    /* PADDING */
+    --section-padding: 15px 30px;
+    --padding-small: 5px;
+    --padding-medium: 10px;
+    --padding-large: 15px;
+    --padding-Xlarge: 20px;
+    --padding-XXlarge: 25px;
+
+    /* border radius variables */
+    --border-radius-small: 5px;
+    --border-radius-medium: 10px;
+    --border-radius-large: 15px;
+    --border-radius-xlarge: 20px;
+    --border-radius-xxlarge: 30px;
+
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+}
+
+main {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--section-padding);
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+
+nav button {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: none;
+    outline: none;
+    padding: var(--padding-medium) var(--padding-large);
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+section {
+    padding: var(--section-padding);
+    display: flex;
+    flex-grow: 1;
+    justify-content: space-between;
+    gap: var(--padding-large);
+}
+
+section.board {
+    background-color: var(--background-color);
+}
+
+section .task-column {
+    background-color: var(--secondary-color);
+    width: 30%;
+    flex-grow: 1;
+    padding: var(--padding-large);
+    border-radius: var(--border-radius-large);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-medium);
+    transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1) ;
+    border: 2px solid transparent;
+}
+
+section .task-column .heading {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #FFFFFF;
+}
+
+section .task-column .task {
+    color: var(--text-color);
+    padding: var(--padding-medium);
+    border-radius: var(--border-radius-small);
+    background-color: var(--bg-button-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-medium);
+    cursor: grab;
+    transition: opacity 0.2s ease;
+}
+
+section .task-column .task h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+section .task-column .task p {
+    font-size: 1rem;
+    margin-bottom: 0;
+}
+
+section .task-column .task .task-buttons {
+    display: flex;
+    gap: var(--padding-small);
+    margin-top: var(--padding-small);
+}
+
+section .task-column .task button {
+    color: var(--text-color);
+    background-color: var(--accent-color);
+    border: none;
+    outline: none;
+    padding: var(--padding-small) var(--padding-medium);
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+section .task-column .task .delete-btn {
+    background-color: #d32f2f;
+}
+
+section .task-column .task button:hover {
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+section .task-column.hover-over {
+    border: 2px dashed var(--accent-color)  ;
+    scale: 1.05;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal.show {
+    display: flex;
+}
+.modal .centre {
+    background-color: rgba(44, 44, 44, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: var(--padding-XXlarge);
+    border-radius: var(--border-radius-large);
+    display: flex;
+    flex-direction: column;
+    gap: var(--padding-large);
+    z-index: 10;
+    min-width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+.modal .centre h2 {
+    color: var(--text-color);
+    margin-bottom: var(--padding-medium);
+}
+.modal .centre label {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-top: var(--padding-medium);
+}
+.modal .centre input,
+.modal .centre textarea,
+.modal .centre select {
+    background-color: var(--bg-button-color);
+    color: var(--text-color);
+    border: none;
+    outline: none;
+    padding: var(--padding-medium);
+    border-radius: var(--border-radius-small);
+    font-family: inherit;
+}
+.modal .centre textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+.modal .centre button {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    border: none;
+    outline: none;
+    padding: var(--padding-medium) var(--padding-large);
+    border-radius: var(--border-radius-medium);
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: var(--padding-medium);
+}
+.modal .centre button:hover {
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+}
+/* Responsive Design */
+
+/* Tablets and Medium Screens (768px and below) */
+@media (max-width: 768px) {
+    :root {
+        --section-padding: 10px 15px;
+        --padding-large: 10px;
+    }
+
+    nav {
+        padding: 10px 15px;
+    }
+
+    nav button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    section {
+        padding: 10px 15px;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    section .task-column {
+        width: 100%;
+        min-height: 300px;
+    }
+
+    section .task-column .heading {
+        margin-bottom: 10px;
+    }
+
+    section .task-column .task h2 {
+        font-size: 1rem;
+    }
+
+    section .task-column .task p {
+        font-size: 0.9rem;
+    }
+
+    section .task-column .task button {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    .modal .centre {
+        min-width: 90%;
+        max-width: 500px;
+        padding: var(--padding-Xlarge);
+    }
+
+    .modal .centre h2 {
+        font-size: 1.3rem;
+    }
+
+    .modal .centre input,
+    .modal .centre textarea {
+        font-size: 1rem;
+    }
+}
+
+/* Small Screens and Phones (480px and below) */
+@media (max-width: 480px) {
+    :root {
+        --section-padding: 8px 10px;
+        --padding-medium: 8px;
+        --padding-large: 8px;
+    }
+
+    body {
+        font-size: 14px;
+    }
+
+    nav {
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    nav .left {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    nav button {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    main {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    section {
+        padding: 8px 10px;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    section .task-column {
+        width: 100%;
+        min-height: 250px;
+        padding: 10px;
+    }
+
+    section .task-column .heading {
+        margin-bottom: 8px;
+    }
+
+    section .task-column .heading .left {
+        font-size: 0.95rem;
+        font-weight: bold;
+    }
+
+    section .task-column .heading .right {
+        font-size: 0.9rem;
+    }
+
+    section .task-column .task {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    section .task-column .task h2 {
+        font-size: 0.95rem;
+    }
+
+    section .task-column .task p {
+        font-size: 0.85rem;
+    }
+
+    section .task-column .task .task-buttons {
+        gap: 4px;
+        margin-top: 6px;
+    }
+
+    section .task-column .task button {
+        font-size: 0.75rem;
+        padding: 5px 8px;
+    }
+
+    section .task-column .task .task-timer {
+        font-size: 0.7rem !important;
+    }
+
+    .modal .centre {
+        min-width: 95%;
+        padding: var(--padding-Xlarge);
+        max-width: 100%;
+    }
+
+    .modal .centre h2 {
+        font-size: 1.1rem;
+    }
+
+    .modal .centre label {
+        font-size: 0.9rem;
+    }
+
+    .modal .centre input,
+    .modal .centre textarea,
+    .modal .centre select {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .modal .centre button {
+        padding: 10px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+}
+
+/* Extra Small Screens (320px and below) */
+@media (max-width: 320px) {
+    nav .left {
+        font-size: 1rem;
+    }
+
+    section .task-column .heading .left {
+        font-size: 0.85rem;
+    }
+
+    section .task-column .task h2 {
+        font-size: 0.9rem;
+    }
+
+    section .task-column .task p {
+        font-size: 0.8rem;
+    }
+
+    .modal .centre {
+        padding: var(--padding-Xlarge);
+    }
+
+    .modal .centre h2 {
+        font-size: 1rem;
+    }
+}
+
+/* Landscape Mode for Tablets */
+@media (max-width: 1024px) and (orientation: landscape) {
+    main {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    section {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    section .task-column {
+        width: calc(50% - 8px);
+    }
+}
