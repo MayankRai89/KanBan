@@ -295,6 +295,27 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+.notification-indicator {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #64748b;
+    border: 1.5px solid var(--bg-surface);
+    transition: var(--transition);
+}
+
+.notification-indicator.active {
+    background-color: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+}
+
+.notification-indicator.disabled {
+    background-color: #ef4444;
+}
+
 [data-theme="dark"] .sun-icon { display: block; }
 [data-theme="dark"] .moon-icon { display: none; }
 [data-theme="light"] .sun-icon { display: none; }
@@ -386,6 +407,48 @@ body {
 
 .stat-pill-done .stat-num {
     color: #34d399;
+}
+
+.stat-pill-reminder {
+    cursor: pointer;
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: #a5b4fc;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.stat-pill-reminder:hover {
+    background: rgba(99, 102, 241, 0.22);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px var(--brand-glow);
+}
+
+.reminder-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: reminderPulse 2s infinite;
+}
+
+.reminder-pulse.disabled {
+    background-color: #ef4444;
+    animation: none;
+}
+
+@keyframes reminderPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }
 
 /* ==========================================================================
@@ -786,6 +849,15 @@ body {
     border-color: var(--tag-border);
 }
 
+.badge-reminder {
+    background: rgba(99, 102, 241, 0.1);
+    color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.25);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .badge-due {
     background: var(--bg-input);
     color: var(--text-secondary);
@@ -1067,6 +1139,98 @@ body {
         opacity: 0;
         transform: translateY(-8px) scale(0.95);
     }
+}
+
+.toast.toast-reminder {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 18px;
+    min-width: 290px;
+    max-width: 380px;
+    border-left: 4px solid var(--brand-primary);
+    box-shadow: var(--shadow-lg);
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-reminder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--brand-primary);
+}
+
+.toast-reminder-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.toast-reminder-close:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-input);
+}
+
+.toast-reminder-title {
+    font-size: 0.94rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.35;
+}
+
+.toast-reminder-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+.toast-reminder-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.toast-btn {
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.toast-btn-done {
+    background: #10b981;
+    color: #ffffff;
+}
+
+.toast-btn-done:hover {
+    filter: brightness(1.1);
+}
+
+.toast-btn-dismiss {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.toast-btn-dismiss:hover {
+    color: var(--text-primary);
+    background: var(--bg-input);
 }
 
 /* ==========================================================================

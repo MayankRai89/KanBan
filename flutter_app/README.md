@@ -42,6 +42,9 @@ Designed with **Google Stitch** and implemented with **Flutter**, this front pag
 7. **Adaptive Navigation & Responsiveness**:
    - Dynamic layout switching: Side **NavigationRail** on tablets/desktops and bottom **NavigationBar** on mobile phones
    - Fluid sizing, constrained container widths for tablets, and touch-optimized hit areas on mobile
+8. **Hourly Task Reminders**:
+   - Interactive notification bell toggle in the header
+   - Color-coded `⏰ Hourly alert` badges displayed on all incomplete tasks until marked completed
 
 ---
 

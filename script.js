@@ -15,6 +15,8 @@
 const STORAGE_KEY = 'taskflow_tasks';
 const LEGACY_KANBAN_KEY = 'kanban_tasks';
 const THEME_KEY = 'taskflow_theme';
+const REMINDERS_KEY = 'taskflow_hourly_reminders_enabled';
+const HOURLY_INTERVAL_MS = 60 * 60 * 1000; // 1 Hour (3,600,000 ms)
 
 // Application State
 let tasks = [];
@@ -22,6 +24,8 @@ let currentFilter = 'all'; // 'all' | 'active' | 'completed'
 let currentPriority = 'all'; // 'all' | 'high' | 'medium' | 'low'
 let currentCategory = 'all'; // 'all' | 'work' | 'personal' | 'study' | 'general'
 let searchQuery = '';
+let remindersEnabled = true;
+let hourlyReminderInterval = null;
 
 // DOM Elements
 const taskListEl = document.getElementById('task-list');
@@ -46,6 +50,8 @@ const statDoneCount = document.getElementById('stat-done-count');
 const statsSummary = document.getElementById('stats-summary');
 const statsPercentage = document.getElementById('stats-percentage');
 const progressBarFill = document.getElementById('progress-bar-fill');
+const hourlyReminderPill = document.getElementById('hourly-reminder-pill');
+const reminderStatusText = document.getElementById('reminder-status-text');
 
 // Modal Elements
 const taskModal = document.getElementById('task-modal');
@@ -63,6 +69,8 @@ const modalCancelBtn = document.getElementById('modal-cancel-btn');
 
 // Theme & Notifications
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const notificationToggleBtn = document.getElementById('notification-toggle-btn');
+const notificationIndicator = document.getElementById('notification-indicator');
 const toastContainer = document.getElementById('toast-container');
 
 // ==========================================================================
@@ -71,6 +79,7 @@ const toastContainer = document.getElementById('toast-container');
 
 function initApp() {
     initTheme();
+    initReminders();
     loadTasks();
     setupEventListeners();
     render();
@@ -89,11 +98,238 @@ function toggleTheme() {
     showToast(`Switched to ${nextTheme === 'dark' ? 'Dark' : 'Light'} theme`);
 }
 
+// ==========================================================================
+// Hourly Task Reminder System (Repeats Every Hour Until Completed)
+// ==========================================================================
+
+function initReminders() {
+    const saved = localStorage.getItem(REMINDERS_KEY);
+    remindersEnabled = saved !== 'false'; // default to enabled
+    updateNotificationUI();
+
+    // Start background check interval (checks every 30 seconds for any elapsed 1-hour interval)
+    if (hourlyReminderInterval) {
+        clearInterval(hourlyReminderInterval);
+    }
+    hourlyReminderInterval = setInterval(checkHourlyTaskReminders, 30000);
+
+    // Also check immediately when the user switches tabs back or refocuses the app
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkHourlyTaskReminders();
+        }
+    });
+    window.addEventListener('focus', checkHourlyTaskReminders);
+}
+
+function updateNotificationUI() {
+    if (!notificationIndicator || !reminderStatusText) return;
+
+    if (remindersEnabled) {
+        notificationIndicator.className = 'notification-indicator active';
+        notificationIndicator.title = 'Hourly Reminders: Active (repeats every hour until completed)';
+        reminderStatusText.textContent = 'Hourly: ON';
+        if (hourlyReminderPill) {
+            hourlyReminderPill.title = 'Hourly reminders active (repeats every hour until completed). Click to test alert.';
+            const pulse = hourlyReminderPill.querySelector('.reminder-pulse');
+            if (pulse) pulse.classList.remove('disabled');
+        }
+    } else {
+        notificationIndicator.className = 'notification-indicator disabled';
+        notificationIndicator.title = 'Hourly Reminders: Paused';
+        reminderStatusText.textContent = 'Hourly: OFF';
+        if (hourlyReminderPill) {
+            hourlyReminderPill.title = 'Hourly reminders paused. Click to enable.';
+            const pulse = hourlyReminderPill.querySelector('.reminder-pulse');
+            if (pulse) pulse.classList.add('disabled');
+        }
+    }
+}
+
+async function handleNotificationToggle() {
+    // If browser notifications permission is 'default', request it politely
+    if ('Notification' in window && Notification.permission === 'default') {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+            showToast('Browser notifications enabled! You will be alerted even in background tabs.');
+        }
+    }
+
+    remindersEnabled = !remindersEnabled;
+    localStorage.setItem(REMINDERS_KEY, remindersEnabled ? 'true' : 'false');
+    updateNotificationUI();
+    render();
+
+    if (remindersEnabled) {
+        showToast('Hourly reminders active — repeating every hour for incomplete tasks ⏰');
+    } else {
+        showToast('Hourly reminders paused ⏸️');
+    }
+}
+
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        return false;
+    }
+    if (Notification.permission === 'granted') {
+        return true;
+    }
+    if (Notification.permission !== 'denied') {
+        try {
+            const result = await Notification.requestPermission();
+            updateNotificationUI();
+            return result === 'granted';
+        } catch (e) {
+            return false;
+        }
+    }
+    return false;
+}
+
+function playReminderChime() {
+    try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        const audioCtx = new AudioContextClass();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now); // D5
+        osc.frequency.setValueAtTime(880, now + 0.14); // A5
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.55);
+    } catch (e) {
+        // Audio policy or unsupported
+    }
+}
+
+function checkHourlyTaskReminders() {
+    if (!remindersEnabled) return;
+
+    const now = Date.now();
+    // Only incomplete/active tasks trigger notifications until completed!
+    const activeTasks = tasks.filter(t => !t.completed);
+    if (activeTasks.length === 0) return;
+
+    let anyNotified = false;
+
+    activeTasks.forEach(task => {
+        if (!task.lastNotifiedAt) {
+            task.lastNotifiedAt = task.createdAt || now;
+        }
+
+        const elapsed = now - task.lastNotifiedAt;
+        if (elapsed >= HOURLY_INTERVAL_MS) {
+            triggerTaskReminder(task);
+            task.lastNotifiedAt = now;
+            anyNotified = true;
+        }
+    });
+
+    if (anyNotified) {
+        saveTasks();
+        render();
+    }
+}
+
+function triggerTaskReminder(task, isTest = false) {
+    // 1. Play gentle audio chime
+    playReminderChime();
+
+    // 2. Trigger native OS / Browser Notification if granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            const prefix = isTest ? '🔔 [Test] Hourly Alert' : '⏰ Hourly Task Reminder';
+            const notif = new Notification(`${prefix}: ${task.title}`, {
+                body: `This task is pending (${task.priority.toUpperCase()} priority).\nRepeats every hour until completed. Click to complete.`,
+                icon: 'https://cdn-icons-png.flaticon.com/512/906/906334.png',
+                tag: `task-hourly-${task.id}`,
+                renotify: true
+            });
+            notif.onclick = () => {
+                window.focus();
+                notif.close();
+            };
+        } catch (err) {
+            console.warn('Browser notification error:', err);
+        }
+    }
+
+    // 3. Always show interactive in-app toast with "Mark Complete" action button
+    showReminderToast(task);
+}
+
+function showReminderToast(task) {
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-reminder';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="toast-reminder-header">
+            <span>⏰ Hourly Task Reminder</span>
+            <button class="toast-reminder-close" title="Dismiss">×</button>
+        </div>
+        <div class="toast-reminder-title">${escapeHtml(task.title)}</div>
+        <div class="toast-reminder-desc">This task is still pending. Repeats hourly until completed.</div>
+        <div class="toast-reminder-actions">
+            <button class="toast-btn toast-btn-dismiss">Dismiss</button>
+            <button class="toast-btn toast-btn-done">✓ Mark Done</button>
+        </div>
+    `;
+
+    const closeBtn = toast.querySelector('.toast-reminder-close');
+    const dismissBtn = toast.querySelector('.toast-btn-dismiss');
+    const doneBtn = toast.querySelector('.toast-btn-done');
+
+    const removeToast = () => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    };
+
+    closeBtn.addEventListener('click', removeToast);
+    dismissBtn.addEventListener('click', removeToast);
+    doneBtn.addEventListener('click', () => {
+        toggleTaskCompletion(task.id);
+        removeToast();
+    });
+
+    toastContainer.appendChild(toast);
+
+    // Auto dismiss after 16 seconds if user doesn't interact
+    setTimeout(() => {
+        removeToast();
+    }, 16000);
+}
+
+function testHourlyReminder() {
+    const activeTasks = tasks.filter(t => !t.completed);
+    const targetTask = activeTasks.length > 0 
+        ? activeTasks[0] 
+        : { id: 'test_sample', title: 'Example Pending Task', priority: 'high', desc: 'Sample task for notification test' };
+
+    triggerTaskReminder(targetTask, true);
+    showToast('Sent test hourly alert! Incomplete tasks repeat every hour until completed.');
+}
+
 function loadTasks() {
     const rawData = localStorage.getItem(STORAGE_KEY);
     if (rawData) {
         try {
             tasks = JSON.parse(rawData);
+            // Ensure lastNotifiedAt is present on all tasks
+            tasks.forEach(t => {
+                if (!t.lastNotifiedAt) {
+                    t.lastNotifiedAt = t.createdAt || Date.now();
+                }
+            });
             return;
         } catch (e) {
             console.error('Error parsing tasks:', e);
@@ -115,7 +351,8 @@ function loadTasks() {
                     priority: 'medium',
                     category: 'general',
                     dueDate: '',
-                    createdAt: parseInt(oldTask.timestamp) || Date.now()
+                    createdAt: parseInt(oldTask.timestamp) || Date.now(),
+                    lastNotifiedAt: parseInt(oldTask.timestamp) || Date.now()
                 }));
                 saveTasks();
                 showToast(`Imported ${tasks.length} tasks from your previous board`);
@@ -136,7 +373,8 @@ function loadTasks() {
             priority: 'high',
             category: 'general',
             dueDate: getFormattedDateOffset(0), // Today
-            createdAt: Date.now() - 3600000
+            createdAt: Date.now() - 3600000,
+            lastNotifiedAt: Date.now() - 3600000
         },
         {
             id: generateId(),
@@ -146,7 +384,8 @@ function loadTasks() {
             priority: 'medium',
             category: 'work',
             dueDate: getFormattedDateOffset(1), // Tomorrow
-            createdAt: Date.now() - 1800000
+            createdAt: Date.now() - 1800000,
+            lastNotifiedAt: Date.now() - 1800000
         },
         {
             id: generateId(),
@@ -156,7 +395,8 @@ function loadTasks() {
             priority: 'low',
             category: 'personal',
             dueDate: '',
-            createdAt: Date.now() - 7200000
+            createdAt: Date.now() - 7200000,
+            lastNotifiedAt: Date.now() - 7200000
         }
     ];
     saveTasks();
@@ -324,6 +564,11 @@ function createTaskElement(task) {
                     ${categoryIcons[task.category] || task.category}
                 </span>
                 ${dueBadgeHtml}
+                ${!task.completed && remindersEnabled ? `
+                <span class="badge badge-reminder" title="Hourly reminder active: repeats every hour until completed">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    Hourly alert
+                </span>` : ''}
                 <span class="task-date-created">${createdDateStr}</span>
             </div>
         </div>
@@ -401,11 +646,16 @@ function toggleTaskCompletion(taskId) {
     if (!task) return;
 
     task.completed = !task.completed;
+    if (!task.completed) {
+        task.lastNotifiedAt = Date.now(); // Reset hourly timer when reactivated
+    }
     saveTasks();
     render();
 
     if (task.completed) {
-        showToast('Task completed! Great job! 🎉');
+        showToast('Task completed! Hourly alerts for this task stopped. 🎉');
+    } else {
+        showToast('Task reactivated. Hourly alerts will repeat every hour.');
     }
 }
 
@@ -442,14 +692,15 @@ function handleQuickAdd(e) {
         priority: 'medium',
         category: 'general',
         dueDate: '',
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        lastNotifiedAt: Date.now()
     };
 
     tasks.unshift(newTask);
     saveTasks();
     quickTaskInput.value = '';
     render();
-    showToast('Task added successfully!');
+    showToast('Task added! Hourly reminder active until completed.');
 }
 
 // ==========================================================================
@@ -518,10 +769,11 @@ function handleFormSubmit(e) {
             priority: taskPriorityInput.value,
             category: taskCategoryInput.value,
             dueDate: taskDueDateInput.value,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            lastNotifiedAt: Date.now()
         };
         tasks.unshift(newTask);
-        showToast('New task created!');
+        showToast('New task created! Hourly reminder active.');
     }
 
     saveTasks();
@@ -560,6 +812,16 @@ function showToast(message) {
 function setupEventListeners() {
     // Theme toggle
     themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // Hourly Reminders toggle & test
+    if (notificationToggleBtn) {
+        notificationToggleBtn.addEventListener('click', handleNotificationToggle);
+    }
+    if (hourlyReminderPill) {
+        hourlyReminderPill.addEventListener('click', () => {
+            testHourlyReminder();
+        });
+    }
 
     // Quick add form
     quickAddForm.addEventListener('submit', handleQuickAdd);

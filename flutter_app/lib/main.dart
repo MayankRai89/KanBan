@@ -77,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _quickAddController = TextEditingController();
   int _selectedCategoryIndex = 0;
   int _currentNavIndex = 0;
+  bool _hourlyRemindersEnabled = true;
 
   final List<String> _categories = ['All', 'Work', 'Personal', 'Study'];
 
@@ -153,10 +154,36 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _toggleHourlyReminders() {
+    setState(() {
+      _hourlyRemindersEnabled = !_hourlyRemindersEnabled;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _hourlyRemindersEnabled
+              ? '⏰ Hourly reminders active: Repeating every hour for incomplete tasks until completion!'
+              : '⏸️ Hourly reminders paused.',
+        ),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   void _toggleTask(TaskItem task) {
     setState(() {
       task.isCompleted = !task.isCompleted;
     });
+    if (task.isCompleted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Task completed! Hourly alerts for this task stopped. 🎉'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _deleteTask(String id) {
@@ -247,10 +274,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     IconButton.filledTonal(
-                      onPressed: () {},
-                      icon: const Badge(
+                      onPressed: _toggleHourlyReminders,
+                      tooltip: 'Hourly Reminders: ${_hourlyRemindersEnabled ? "Active" : "Paused"}',
+                      icon: Badge(
                         smallSize: 8,
-                        child: Icon(Icons.notifications_none_rounded, size: 22),
+                        backgroundColor: _hourlyRemindersEnabled
+                            ? const Color(0xFF10B981)
+                            : Colors.grey,
+                        child: Icon(
+                          _hourlyRemindersEnabled
+                              ? Icons.notifications_active_rounded
+                              : Icons.notifications_off_rounded,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ],
@@ -849,6 +885,31 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
+
+                          // Hourly Reminder Indicator (visible on incomplete tasks until completed)
+                          if (!task.isCompleted && _hourlyRemindersEnabled)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6366F1).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.alarm_rounded, size: 12, color: Color(0xFF818CF8)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Hourly alert',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF818CF8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ],

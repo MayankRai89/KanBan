@@ -49,6 +49,15 @@
 
         <div class="header-actions">
           <button
+            id="notification-toggle-btn"
+            class="icon-btn"
+            title="Hourly Reminders: Active (repeats every hour until completed). Click to toggle or test."
+            aria-label="Hourly task reminders settings"
+          >
+            <span class="bell-icon">🔔</span>
+            <span id="notification-indicator" class="notification-indicator active"></span>
+          </button>
+          <button
             id="theme-toggle-btn"
             class="icon-btn"
             title="Toggle Theme"
@@ -104,6 +113,10 @@
             </div>
             <div class="stat-pill stat-pill-done">
               <span class="stat-num" id="stat-done-count">0</span> Done
+            </div>
+            <div class="stat-pill stat-pill-reminder" id="hourly-reminder-pill" title="Click to test or toggle hourly reminders">
+              <span class="reminder-pulse"></span>
+              <span id="reminder-status-text">Hourly: ON</span>
             </div>
           </div>
         </div>

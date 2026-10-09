@@ -14,7 +14,7 @@ A sleek, responsive, and intuitive To-Do application built with vanilla HTML5, C
 - **📊 Progress Tracking**: Live statistics displaying total tasks, active tasks, completed tasks, and an animated progress bar.
 - **🌗 Dark & Light Themes**: Smooth theme switcher with automatic preference persistence.
 - **💾 Local Storage Persistence**: All tasks, status changes, and settings persist automatically in your browser.
-- **🔄 Legacy Migration**: Automatically imports and retains tasks from prior Kanban board sessions if found.
+- **🔔 Hourly Task Reminders**: Automatically sends notifications repeating every hour for incomplete tasks until marked completed. Supports native browser notifications, soft Web Audio chimes, and interactive in-app toasts with quick "Mark Done" actions.
 - **📱 Responsive Glassmorphic Design**: Tailored for desktops, tablets, and smartphones.
 
 ---
