@@ -120,6 +120,13 @@ function initReminders() {
         }
     });
     window.addEventListener('focus', checkHourlyTaskReminders);
+
+    // Register Service Worker for PWA / Device lock-screen notifications if hosted
+    if ('serviceWorker' in navigator && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+            console.log('Service Worker registration:', err);
+        });
+    }
 }
 
 function updateNotificationUI() {

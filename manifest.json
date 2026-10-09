@@ -1,0 +1,22 @@
+{
+  "name": "TaskFlow — Smart To-Do App",
+  "short_name": "TaskFlow",
+  "description": "Smart To-Do app with hourly task reminders until completion",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f17",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/906/906334.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/906/906334.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
