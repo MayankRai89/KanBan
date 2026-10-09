@@ -39,8 +39,9 @@ Designed with **Google Stitch** and implemented with **Flutter**, this front pag
    - Three-dot dropdown menu for deleting tasks
 6. **Completed Archive**:
    - Dedicated section for completed tasks
-7. **Bottom Navigation**:
-   - Fixed navigation bar with destinations: `Today`, `Upcoming`, `Projects`, `Settings`
+7. **Adaptive Navigation & Responsiveness**:
+   - Dynamic layout switching: Side **NavigationRail** on tablets/desktops and bottom **NavigationBar** on mobile phones
+   - Fluid sizing, constrained container widths for tablets, and touch-optimized hit areas on mobile
 
 ---
 

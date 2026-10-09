@@ -169,6 +169,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth >= 650;
+    final isSmallPhone = screenWidth < 380;
+    final horizontalPadding = isSmallPhone ? 14.0 : (isTablet ? 28.0 : 20.0);
 
     final activeTasks = _tasks.where((t) {
       if (t.isCompleted) return false;
@@ -187,32 +191,46 @@ class _HomeScreenState extends State<HomeScreen> {
     final progress = totalTasks > 0 ? (totalCompleted / totalTasks) : 0.0;
     final percentage = (progress * 100).round();
 
-    return Scaffold(
-      body: SafeArea(
+    // Scrollable content area
+    Widget mainContent = Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860),
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             // Top App Bar / Greeting
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  isTablet ? 24 : 16,
+                  horizontalPadding,
+                  12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 22,
+                          radius: isSmallPhone ? 18 : 22,
                           backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
-                          child: Icon(Icons.person, color: theme.colorScheme.primary),
+                          child: Icon(
+                            Icons.person,
+                            color: theme.colorScheme.primary,
+                            size: isSmallPhone ? 20 : 24,
+                          ),
                         ),
-                        const SizedBox(width: 14),
+                        SizedBox(width: isSmallPhone ? 10 : 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Good morning, Alex 👋',
-                              style: theme.textTheme.titleMedium?.copyWith(
+                              style: (isSmallPhone
+                                      ? theme.textTheme.titleSmall
+                                      : theme.textTheme.titleMedium)
+                                  ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: -0.3,
                               ),
@@ -221,6 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               'Thursday, Oct 24',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: isDark ? Colors.white60 : Colors.black45,
+                                fontSize: isSmallPhone ? 11 : 12,
                               ),
                             ),
                           ],
@@ -242,9 +261,12 @@ class _HomeScreenState extends State<HomeScreen> {
             // Daily Progress Tracker Card
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 8,
+                ),
                 child: Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(isSmallPhone ? 14 : 20),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -263,22 +285,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Progress Radial Ring
                       SizedBox(
-                        width: 76,
-                        height: 76,
+                        width: isSmallPhone ? 64 : 76,
+                        height: isSmallPhone ? 64 : 76,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
                             CircularProgressIndicator(
                               value: progress,
-                              strokeWidth: 8,
-                              backgroundColor: isDark ? Colors.white12 : const Color(0xFFF1F5F9),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                              strokeWidth: isSmallPhone ? 6 : 8,
+                              backgroundColor: isDark
+                                  ? Colors.white12
+                                  : const Color(0xFFF1F5F9),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFF10B981),
+                              ),
                               strokeCap: StrokeCap.round,
                             ),
                             Center(
                               child: Text(
                                 '$percentage%',
-                                style: theme.textTheme.titleMedium?.copyWith(
+                                style: (isSmallPhone
+                                        ? theme.textTheme.titleSmall
+                                        : theme.textTheme.titleMedium)
+                                    ?.copyWith(
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
@@ -286,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 20),
+                      SizedBox(width: isSmallPhone ? 14 : 20),
                       // Motivational Copy & Streaks
                       Expanded(
                         child: Column(
@@ -302,18 +331,26 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 4),
                             Text(
                               'Almost there! $totalCompleted of $totalTasks completed',
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: (isSmallPhone
+                                      ? theme.textTheme.bodySmall
+                                      : theme.textTheme.bodyMedium)
+                                  ?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 8),
                             Wrap(
                               spacing: 8,
+                              runSpacing: 4,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF59E0B).withOpacity(0.12),
+                                    color: const Color(0xFFF59E0B)
+                                        .withOpacity(0.12),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Text(
@@ -326,9 +363,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withOpacity(0.1),
+                                    color: theme.colorScheme.primary
+                                        .withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -354,9 +395,17 @@ class _HomeScreenState extends State<HomeScreen> {
             // Quick Add Input Bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  10,
+                  horizontalPadding,
+                  10,
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -366,16 +415,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.add_task_rounded, color: Colors.grey, size: 20),
+                      const Icon(
+                        Icons.add_task_rounded,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
                           controller: _quickAddController,
                           onSubmitted: _addTask,
-                          decoration: const InputDecoration(
-                            hintText: 'Add a new task and tap +...',
+                          decoration: InputDecoration(
+                            hintText: isSmallPhone
+                                ? 'Add a task...'
+                                : 'Add a new task and tap +...',
                             border: InputBorder.none,
-                            hintStyle: TextStyle(fontSize: 14),
+                            hintStyle: const TextStyle(fontSize: 14),
                           ),
                         ),
                       ),
@@ -386,7 +441,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           foregroundColor: Colors.white,
                           shape: const CircleBorder(),
                         ),
-                        icon: const Icon(Icons.arrow_upward_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.arrow_upward_rounded,
+                          size: 18,
+                        ),
                       ),
                     ],
                   ),
@@ -400,7 +458,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 48,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                  ),
                   itemCount: _categories.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 10),
                   itemBuilder: (context, index) {
@@ -417,17 +477,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w600,
                         color: isSelected
                             ? Colors.white
-                            : (isDark ? Colors.white70 : const Color(0xFF475569)),
+                            : (isDark
+                                ? Colors.white70
+                                : const Color(0xFF475569)),
                         fontSize: 13,
                       ),
                       selectedColor: theme.colorScheme.primary,
-                      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                      backgroundColor: isDark
+                          ? const Color(0xFF1E293B)
+                          : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                         side: BorderSide(
                           color: isSelected
                               ? Colors.transparent
-                              : (isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                              : (isDark
+                                  ? Colors.white12
+                                  : const Color(0xFFE2E8F0)),
                         ),
                       ),
                       showCheckmark: false,
@@ -440,7 +506,12 @@ class _HomeScreenState extends State<HomeScreen> {
             // Section Header: Today's Tasks
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  20,
+                  horizontalPadding,
+                  10,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -468,8 +539,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 (context, index) {
                   final task = activeTasks[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                    child: _buildTaskCard(task, theme, isDark),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 6,
+                    ),
+                    child: _buildTaskCard(task, theme, isDark, isSmallPhone),
                   );
                 },
                 childCount: activeTasks.length,
@@ -480,7 +554,12 @@ class _HomeScreenState extends State<HomeScreen> {
             if (completedTasks.isNotEmpty) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    24,
+                    horizontalPadding,
+                    10,
+                  ),
                   child: Text(
                     "Completed (${completedTasks.length})",
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -495,8 +574,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   (context, index) {
                     final task = completedTasks[index];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                      child: _buildTaskCard(task, theme, isDark),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 6,
+                      ),
+                      child: _buildTaskCard(task, theme, isDark, isSmallPhone),
                     );
                   },
                   childCount: completedTasks.length,
@@ -510,40 +592,107 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentNavIndex,
-        onDestinationSelected: (idx) => setState(() => _currentNavIndex = idx),
-        indicatorColor: theme.colorScheme.primary.withOpacity(0.15),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.check_circle_outline_rounded),
-            selectedIcon: Icon(Icons.check_circle_rounded),
-            label: 'Today',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_today_rounded),
-            selectedIcon: Icon(Icons.calendar_month_rounded),
-            label: 'Upcoming',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder_rounded),
-            label: 'Projects',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tune_rounded),
-            selectedIcon: Icon(Icons.settings_rounded),
-            label: 'Settings',
-          ),
-        ],
+    return Scaffold(
+      body: SafeArea(
+        child: isTablet
+            ? Row(
+                children: [
+                  NavigationRail(
+                    selectedIndex: _currentNavIndex,
+                    onDestinationSelected: (idx) =>
+                        setState(() => _currentNavIndex = idx),
+                    labelType: NavigationRailLabelType.all,
+                    backgroundColor: isDark
+                        ? const Color(0xFF131B2E)
+                        : Colors.white,
+                    indicatorColor:
+                        theme.colorScheme.primary.withOpacity(0.15),
+                    leading: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor:
+                            theme.colorScheme.primary.withOpacity(0.15),
+                        child: Icon(
+                          Icons.task_alt_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    destinations: const [
+                      NavigationRailDestination(
+                        icon: Icon(Icons.check_circle_outline_rounded),
+                        selectedIcon: Icon(Icons.check_circle_rounded),
+                        label: Text('Today'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.calendar_today_rounded),
+                        selectedIcon: Icon(Icons.calendar_month_rounded),
+                        label: Text('Upcoming'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.folder_outlined),
+                        selectedIcon: Icon(Icons.folder_rounded),
+                        label: Text('Projects'),
+                      ),
+                      NavigationRailDestination(
+                        icon: Icon(Icons.tune_rounded),
+                        selectedIcon: Icon(Icons.settings_rounded),
+                        label: Text('Settings'),
+                      ),
+                    ],
+                  ),
+                  const VerticalDivider(thickness: 1, width: 1),
+                  Expanded(child: mainContent),
+                ],
+              )
+            : mainContent,
       ),
+
+      // Bottom Navigation Bar only on mobile screens
+      bottomNavigationBar: isTablet
+          ? null
+          : NavigationBar(
+              selectedIndex: _currentNavIndex,
+              onDestinationSelected: (idx) =>
+                  setState(() => _currentNavIndex = idx),
+              indicatorColor:
+                  theme.colorScheme.primary.withOpacity(0.15),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.check_circle_outline_rounded),
+                  selectedIcon: Icon(Icons.check_circle_rounded),
+                  label: 'Today',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.calendar_today_rounded),
+                  selectedIcon: Icon(Icons.calendar_month_rounded),
+                  label: 'Upcoming',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.folder_outlined),
+                  selectedIcon: Icon(Icons.folder_rounded),
+                  label: 'Projects',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.tune_rounded),
+                  selectedIcon: Icon(Icons.settings_rounded),
+                  label: 'Settings',
+                ),
+              ],
+            ),
     );
   }
 
   /// Task Card Widget
-  Widget _buildTaskCard(TaskItem task, ThemeData theme, bool isDark) {
+  Widget _buildTaskCard(
+    TaskItem task,
+    ThemeData theme,
+    bool isDark, [
+    bool isSmallPhone = false,
+  ]) {
     Color priorityColor;
     String priorityText;
     switch (task.priority) {
@@ -581,29 +730,37 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () => _toggleTask(task),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isSmallPhone ? 13 : 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Custom Rounded Checkbox
+                // Custom Rounded Checkbox with touch-friendly hit area
                 GestureDetector(
                   onTap: () => _toggleTask(task),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: task.isCompleted ? const Color(0xFF10B981) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
                         color: task.isCompleted
                             ? const Color(0xFF10B981)
-                            : (isDark ? Colors.white30 : const Color(0xFFCBD5E1)),
-                        width: 2,
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(7),
+                        border: Border.all(
+                          color: task.isCompleted
+                              ? const Color(0xFF10B981)
+                              : (isDark
+                                  ? Colors.white30
+                                  : const Color(0xFFCBD5E1)),
+                          width: 2,
+                        ),
                       ),
+                      child: task.isCompleted
+                          ? const Icon(Icons.check, size: 16, color: Colors.white)
+                          : null,
                     ),
-                    child: task.isCompleted
-                        ? const Icon(Icons.check, size: 16, color: Colors.white)
-                        : null,
                   ),
                 ),
                 const SizedBox(width: 14),
